@@ -1,0 +1,35 @@
+import { fileURLToPath } from 'node:url'
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url))
+
+// One config, two jobs:
+//   `vite` / `vite build --mode playground` -> the playground app in ./playground
+//   `vite build`                           -> the simulator library in ./dist (library mode)
+export default defineConfig(({ command, mode }) => {
+  const resolve = { alias: { 'visual-quantum-computing': src('index.ts') } }
+
+  if (command === 'serve' || mode === 'playground') {
+    return {
+      root: 'playground',
+      plugins: [react()],
+      resolve,
+      build: { outDir: '../dist-playground', emptyOutDir: true },
+    }
+  }
+
+  return {
+    resolve,
+    build: {
+      lib: {
+        entry: src('index.ts'),
+        name: 'VisualQuantumComputing',
+        fileName: 'visual-quantum-computing',
+        formats: ['es', 'cjs'],
+      },
+      emptyOutDir: false, // keep dist/types emitted by tsc
+      sourcemap: true,
+    },
+  }
+})
